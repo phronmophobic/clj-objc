@@ -1,0 +1,43 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}
+        cnuernber/dtype-next {:mvn/version "8.021"
+                              ;;:local/root "../dtype-next"
+                              }}
+ :aliases
+ {:test {:extra-paths ["test"]
+         :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
+
+  :depstar-objc
+  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
+   :ns-default hf.depstar
+   :aliases [:graal-compile]
+   :exec-fn hf.depstar/uberjar
+   :exec-args {:group-id "com.phronemophobic.clj-libffi"
+               :artifact-id "membrane"
+               :version "1.00-beta-1"
+               :sync-pom true
+               :aot true
+               :compile-ns [;;avclj.main avclj.libavclj
+                            com.phronemophobic.clj-objc
+                            ]
+               :main-class com.phronemophobic.clj-objc
+               :jar "target/clj-objc-uber.jar"
+               ;;Disable tensor code generation and ensure direct linking.
+               :jvm-opts ["-Dtech.v3.datatype.graal-native=true"
+                          "-Dclojure.compiler.direct-linking=true"
+                          "-Dclojure.spec.skip-macros=true"]}}
+
+  :runner
+  {:extra-deps {io.github.cognitect-labs/test-runner
+                {:git/url "https://github.com/cognitect-labs/test-runner"
+                 :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}}
+   :exec-fn cognitect.test-runner.api/test}
+  :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
+        :exec-fn hf.depstar/jar
+        :exec-args {:jar "clj-objc.jar" :sync-pom true}}
+  :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+            :exec-fn deps-deploy.deps-deploy/deploy
+            :exec-args {:installer :local :artifact "clj-objc.jar"}}
+  :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+           :exec-fn deps-deploy.deps-deploy/deploy
+           :exec-args {:installer :remote :artifact "clj-objc.jar"}}}}
