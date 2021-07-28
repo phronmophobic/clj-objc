@@ -1,6 +1,7 @@
 #include <ffi.h>
 #import <objc/message.h>
 #import <Foundation/Foundation.h>
+#import <CoreFoundation/CoreFoundation.h>
 #import "clj_objc.h"
 
 
@@ -245,3 +246,7 @@ void call_objc(int rettype, void* ret, int nargs, int* argtypes, void** values){
 
 }
 
+void run_on_main(void (^block)()){
+    dispatch_sync(dispatch_get_main_queue(),  block);
+
+}
