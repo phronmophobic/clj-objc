@@ -229,7 +229,13 @@
     (call-objc NSString
                "stringWithUTF8String:"
                :pointer
-               :pointer (dt-ffi/string->c s))))
+               :pointer (dt-ffi/string->c (str s)))))
+
+(defn objc->str [ptr]
+  (-> ptr
+      (call-objc "description" :pointer)
+      (call-objc "UTF8String" :pointer)
+      (dt-ffi/c->string)))
 
 (defn ffi_test []
   (initialize-objc)
