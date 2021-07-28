@@ -59,7 +59,7 @@
                 :argtypes [['callback-id :pointer]
                            ['rettype :int32]
                            ['nargs :int32]
-                           ['argtypes :pointer]]}
+                           ['argtypes :pointer?]]}
 
    ,})
 
