@@ -35,6 +35,10 @@
 
 (def objclib-fns
   {
+
+   :run_on_main {:rettype :void
+                 :argtypes [['block :pointer]]}
+
    :call_objc {:rettype :void
                :argtypes [['rettype :int32]
                           ['ret :pointer?]
@@ -371,6 +375,12 @@
                 0)
               :int32
               :pointer :pointer))
+
+(defonce callbacks (atom ()))
+(defn dispatch-main [f]
+  (let [block (make-block f :void)]
+    (swap! callbacks conj f block)
+    (run_on_main block)))
 
 (defn compile-interface-class [& args]
   ((requiring-resolve 'tech.v3.datatype.ffi.graalvm/expose-clojure-functions)
