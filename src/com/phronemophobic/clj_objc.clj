@@ -3,6 +3,7 @@
             [tech.v3.datatype :as dtype]
             tech.v3.datatype.ffi.graalvm-runtime
             [tech.v3.datatype.native-buffer :as native-buffer]
+            [tech.v3.datatype.graal-native :as graal-native]
             [tech.v3.datatype.ffi.size-t :as ffi-size-t]
             [tech.v3.datatype.casting :as casting])
   (:import [tech.v3.datatype.native_buffer NativeBuffer]
@@ -33,103 +34,46 @@
 ;; set the c function pointer with extra arg
 ;; profit?
 
-(def objclib-fns
-  {
+(declare make_block
+         run_on_main)
+(dt-ffi/define-library-interface
+  (merge
+   ;; blocks currently only available for graal native
+   (graal-native/when-defined-graal-native
+    {:run_on_main {:rettype :void
+                   :argtypes [['block :pointer]]}
+     :make_block {:rettype :pointer
+                  :argtypes [['callback-id :pointer]
+                             ['rettype :int32]
+                             ['nargs :int32]
+                             ['argtypes :pointer?]]}})
 
-   :run_on_main {:rettype :void
-                 :argtypes [['block :pointer]]}
-
-   :call_objc {:rettype :void
-               :argtypes [['rettype :int32]
-                          ['ret :pointer?]
-                          ['nargs :int32]
-                          ['argtypes :pointer]
-                          ['args :pointer]]}
-
-   :print_objc {:rettype :void
-                :argtypes [['obj :pointer]]}
-
-   :objc_getClass {:rettype :pointer
-                   :argtypes [['class-name :pointer]]}
-
-   :sel_registerName {:rettype :pointer
-                      :argtypes [['sel-name :pointer]]}
-
-   :make_block {:rettype :pointer
-                :argtypes [['callback-id :pointer]
-                           ['rettype :int32]
+   {:call_objc {:rettype :void
+                :argtypes [['rettype :int32]
+                           ['ret :pointer?]
                            ['nargs :int32]
-                           ['argtypes :pointer?]]}
+                           ['argtypes :pointer]
+                           ['args :pointer]]}
 
-   ,})
+    :print_objc {:rettype :void
+                 :argtypes [['obj :pointer]]}
 
-(defonce ^:private lib (dt-ffi/library-singleton #'objclib-fns))
-(defn set-library-instance!
-  [lib-instance]
-  (dt-ffi/library-singleton-set-instance! lib lib-instance))
+    :objc_getClass {:rettype :pointer
+                    :argtypes [['class-name :pointer]]}
 
-(dt-ffi/library-singleton-reset! lib)
+    :sel_registerName {:rettype :pointer
+                       :argtypes [['sel-name :pointer]]}
 
-(defn- find-fn
-  [fn-kwd]
-  (dt-ffi/library-singleton-find-fn lib fn-kwd))
+    
 
-(defmacro check-error
-  [fn-def & body]
-  `(let [error-val# (long (do ~@body))]
-     (errors/when-not-errorf
-      (>= error-val# 0)
-      "Exception calling: (%d) - \"%s\""
-      error-val# (if-let [err-name#  (get av-error/value->error-map error-val#)]
-                   err-name#
-                   (str-error error-val#)))
-     error-val#))
-
-
-(dt-ffi/define-library-functions com.phronemophobic.clj-objc/objclib-fns find-fn check-error)
-
-(defmacro if-class
-  ([class-name then]
-   `(if-class ~class-name
-      ~then
-      nil))
-  ([class-name then else?]
-   (let [class-exists (try
-                        (Class/forName (name class-name))
-                        true
-                        (catch ClassNotFoundException e
-                          false))]
-     (if class-exists
-       then
-       else?))))
-
-(def initialized?* (atom false))
-
-(defn compile-bindings [& args]
-  ((requiring-resolve 'tech.v3.datatype.ffi.graalvm/define-library)
-   objclib-fns
-   nil
-   {
-    ;;:header-files []
-    :libraries [ ;;"@rpath/libcljbridge.so"
-                ]
-    :classname 'com.phronemohobic.clj-objc.Bindings})
+    ,})
+  :libraries (graal-native/if-defined-graal-native
+              []
+              ["cljobjc"])
+  ;; :libraries ["foo.h"]
+  ;; :header-files ["adsf"]
+  ;; :classname 'Foo.Baz
   )
-
-(when *compile-files*
-  (compile-bindings))
-
-(defn initialize-objc
-  []
-  (if-class com.phronemohobic.clj-objc.Bindings
-    (if (first (swap-vals!
-                initialized?*
-                (fn [init]
-                  (when-not init
-                    (set-library-instance! (com.phronemohobic.clj-objc.Bindings.))
-                    true))))
-      1
-      0)))
 
 
 (defn string->sel [s]
@@ -237,15 +181,21 @@
       (call-objc "UTF8String" :pointer)
       (dt-ffi/c->string)))
 
+(defonce not-garbage (atom ()))
+(defn preserve! [obj]
+  (swap! not-garbage conj obj)
+  obj)
+
 (defn ffi_test []
-  (initialize-objc)
   (let [
-        NSNumber (string->class "NSNumber")
+        NSNumber (preserve! (string->class "NSNumber"))
+        _ (prn ["nsnumber" NSNumber])
         _ (print_objc NSNumber)        
-        num (call-objc NSNumber
-                       "numberWithFloat:"
-                       :pointer
-                       :float32 42.42)
+        num (preserve!
+             (call-objc NSNumber
+                        "numberWithFloat:"
+                        :pointer
+                        :float32 42.42))
         _ (prn "made num")
         _ (print_objc num)
 
@@ -259,15 +209,18 @@
         _ (prn "made woohoo")
         _ (print_objc woohoo)
 
-        NSMutableSet (string->class "NSMutableSet")
-        my-set (call-objc NSMutableSet
-                          "alloc"
-                          :pointer)
+        NSMutableSet (preserve!
+                      (string->class "NSMutableSet"))
+        my-set (preserve!
+                (call-objc NSMutableSet
+                           "alloc"
+                           :pointer))
         _ (prn "made set")
 
-        my-set (call-objc my-set
-                          "init"
-                          :pointer)
+        my-set (preserve!
+                (call-objc my-set
+                           "init"
+                           :pointer))
         _ (prn "init set")
         _ (print_objc my-set)
 
@@ -290,13 +243,7 @@
                         :int32)
         _ (prn "size is now:" size)
         ]
-    (prn "size is: " size)
-    
-    )
-  #_(call-objc :obj "asdf"
-             :int32 2
-             :pointer 0)
-  )
+    (prn "size is: " size)))
 
 
 (defn read-args [arg-types arg-ptr]
@@ -375,7 +322,6 @@
 
 
 (defn make_test_block []
-  (initialize-objc)
   (make-block (fn [a b]
                 (println "make call")
                 0)
@@ -392,7 +338,7 @@
   ((requiring-resolve 'tech.v3.datatype.ffi.graalvm/expose-clojure-functions)
    {
     #'ffi_test {:rettype :void}
-    #'make_test_block {:rettype :int64}
+    #'make_test_block {:rettype :pointer}
     #'clj_callback {:rettype :void
                     :argtypes [['callback-id :pointer]
                                ['ret-ptr :pointer]

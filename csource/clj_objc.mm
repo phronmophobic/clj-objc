@@ -103,12 +103,19 @@ int multiplyByFour(void* block, int num){
 }
 
 
+#ifdef GRAAL
+
 static graal_isolate_t *_isolate = NULL;
 void set_graal_isolate(graal_isolate_t *isolate){
     _isolate = isolate;
 }
 
+#endif
+
+
 void callback_wrapper(ffi_cif *cif, void *ret, void* args[], void *callback_id) {
+
+#ifdef GRAAL
 	// *(ffi_arg *) ret = fputs(*(char **) args[0], (FILE *) stream);
     
     graal_isolatethread_t *thread = NULL;
@@ -127,6 +134,8 @@ void callback_wrapper(ffi_cif *cif, void *ret, void* args[], void *callback_id) 
     void * args_without_block_ptr = args[1];
 
     clj_callback(thread, callback_id, ret, args_without_block_ptr);
+
+#endif
 }
 
 

@@ -39,6 +39,8 @@ void indirect_test(){
 
     ffi_test(thread);
 
+    printf("end ffi_test: \n");
+
     NSComparator mycomp = (NSComparator)make_test_block(thread);
     printf("mycomp: %p\n", mycomp);
 
@@ -61,7 +63,7 @@ void direct_block_test(){
 int main(){
 
 
-    direct_test();
+    // direct_test();
 
     indirect_test();
 

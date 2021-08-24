@@ -18,7 +18,7 @@ rm -rf ./tmp
     # --native-compiler-options='-lffi' \
     # --native-compiler-options='-I/opt/local/include' \
     # --native-compiler-options='-L/opt/local/lib/' \
-INITIALIZE_AT_BUILD_TIME="clojure,com.phronemophobic,tech.v3,tech.v3.datatype,tech.v3.datatype.ffi,tech.v3.parallel,tech.v3.resource,primitive_math,primitive_math$unuse_primitive_operators,primitive_math$using_primitive_operators_QMARK_,primitive_math$use_primitive_operators,primitive_math$variadic_predicate_proxy,primitive_math$variadic_proxy,primitive_math$unuse_primitive_operators,primitive_math$using_primitive_operators_QMARK_,primitive_math$use_primitive_operators,primitive_math$variadic_predicate_proxy,primitive_math$variadic_proxy"
+INITIALIZE_AT_BUILD_TIME='clojure,com.phronemophobic,tech.v3,tech.v3.datatype,tech.v3.datatype.ffi,tech.v3.parallel,tech.v3.resource,primitive_math,primitive_math$unuse_primitive_operators,primitive_math$using_primitive_operators_QMARK_,primitive_math$use_primitive_operators,primitive_math$variadic_predicate_proxy,primitive_math$variadic_proxy,primitive_math$unuse_primitive_operators,primitive_math$using_primitive_operators_QMARK_,primitive_math$use_primitive_operators,primitive_math$variadic_predicate_proxy,primitive_math$variadic_proxy'
 
 
 time \

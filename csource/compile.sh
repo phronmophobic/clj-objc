@@ -10,6 +10,7 @@ cd "$DIR"
 clang++ \
     -I ./thirdparty/include/ffi \
     -I "$DIR/../library" \
+    -DGRAAL \
     -c \
     -g \
     -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk \

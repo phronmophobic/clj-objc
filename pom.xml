@@ -33,7 +33,7 @@
     <dependency>
       <groupId>cnuernber</groupId>
       <artifactId>dtype-next</artifactId>
-      <version>8.021</version>
+      <version>8.027</version>
     </dependency>
   </dependencies>
   <build>

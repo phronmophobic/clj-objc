@@ -1,7 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        cnuernber/dtype-next {:mvn/version "8.021"
-                              ;;:local/root "../dtype-next"
+        cnuernber/dtype-next {:mvn/version "8.027"
+                              ;; :local/root "../dtype-next"
                               }}
  :aliases
  {:test {:extra-paths ["test"]
